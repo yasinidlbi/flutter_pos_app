@@ -1,10 +1,14 @@
 import 'dart:ffi';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../components/button_style.dart';
 import '../constants.dart';
 import 'home_screen.dart';
+import '../models/user.dart';
+import '../models/UserToken.dart';
+import '../data/global.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -91,88 +95,181 @@ class FormLogin extends StatefulWidget {
   @override
   State<FormLogin> createState() => _FormLoginState();
 }
-
 class _FormLoginState extends State<FormLogin> {
+
+  final userNameController = TextEditingController();
+  final userPassController = TextEditingController();
+  bool isLoading = false;
   late bool isRemmber = true;
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    userNameController.dispose();
+    userPassController.dispose();
+
+    super.dispose();
+  }
+  final _formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
     return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
         child:
-        Scrollbar(
-            thickness: 10, //width of scrollbar
-            radius: Radius.circular(20), //corner radius of scrollbar
-            scrollbarOrientation: ScrollbarOrientation.left, //which side to show scrollbar
-            child:SingleChildScrollView(
-              physics: BouncingScrollPhysics(),
-              child:  Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: 50),
-                  Padding(
-                      padding:
-                      EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-                      child: TextField(
-                        decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(25.0),
-                            ),
-                            filled: true,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 15.0),
-                            hintStyle: TextStyle(color: Colors.grey),
-                            labelText: "User Name",
-                            fillColor: Colors.white),
-                      )),
-                  Padding(
-                      padding:
-                      EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-                      child: TextField(
-                        decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(25.0),
-                            ),
-                            filled: true,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 15.0),
-                            hintStyle: TextStyle(color: Colors.grey),
-                            labelText: "Password",
-                            fillColor: Colors.white),
-                      )),
-                  CheckboxListTile(
-                    title: Text("Remmber me"),
-                    value: isRemmber,
-                    onChanged: (newValue) {
-                      setState(() {
-                        isRemmber = newValue!;
-                      });
-                      },
-                    controlAffinity: ListTileControlAffinity.leading,  //  <-- leading Checkbox
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10.0, vertical: 5.0),
-                    child: Container(
-                      width: double.infinity,
-                      child: TextButton(
-                        child: Text(
-                          'LOGIN',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                        style: bs_flatFill(context),
-                        // onPressed: () {},
-                        onPressed: () => Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => HomeScreen())),
-                      ),
-                      ),
+            Stack(
+              children: [
+                Form(
+                  key: _formKey,
+                    child: Scrollbar(
+                        thickness: 10, //width of scrollbar
+                        radius: Radius.circular(20), //corner radius of scrollbar
+                        scrollbarOrientation: ScrollbarOrientation.left, //which side to show scrollbar
+                        child:SingleChildScrollView(
+                          physics: BouncingScrollPhysics(),
+                          child:  Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SizedBox(height: 50),
+                              Padding(
+                                  padding:
+                                  EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+                                  child: TextFormField(
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter some text';
+                                      }
+                                      return null;
+                                    },
+                                    controller: userNameController,
+                                    decoration: InputDecoration(
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(25.0),
+                                        ),
+                                        filled: true,
+                                        contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 15, vertical: 15.0),
+                                        hintStyle: TextStyle(color: Colors.grey),
+                                        labelText: "User Name",
+                                        fillColor: Colors.white),
+                                  )),
+
+                              Padding(
+                                  padding:
+                                  EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+                                  child: TextFormField(
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter some text';
+                                      }
+                                      return null;
+                                    },
+                                    controller: userPassController,
+                                    decoration: InputDecoration(
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(25.0),
+                                        ),
+                                        filled: true,
+                                        contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 15, vertical: 15.0),
+                                        hintStyle: TextStyle(color: Colors.grey),
+                                        labelText: "Password",
+                                        fillColor: Colors.white),
+                                    obscureText: true,
+                                    enableSuggestions: false,
+                                    autocorrect: false,
+                                  )),
+                              CheckboxListTile(
+                                title: Text("Remmber me"),
+                                value: isRemmber,
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    isRemmber = newValue!;
+                                  });
+                                },
+                                controlAffinity: ListTileControlAffinity.leading,  //  <-- leading Checkbox
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10.0, vertical: 5.0),
+                                child: Container(
+                                  width: double.infinity,
+                                  child: TextButton(
+                                      child: Text(
+                                        'LOGIN',
+                                        style: TextStyle(fontSize: 18),
+                                      ),
+                                      style: bs_flatFill(context),
+                                      // onPressed: () {},
+                                      onPressed: () =>
+                                      {
+
+
+
+
+                                      if (_formKey.currentState!.validate())
+                                      {
+                                        setState(() {
+                                          isLoading = true;
+                                        }),
+                                        print(isLoading),
+                                        UserToken.login(userNameController.text,userPassController.text)
+                                            .then((response) => {
+                                          GlobalUserToken = response,
+                                          print(GlobalUserToken?.token),
+                                          if(GlobalUserToken != null)
+                                            {
+                                              if(isRemmber)
+                                                {
+                                              // SharedPreferences prefs = await SharedPreferences.getInstance();
+                                              // // Save an integer value to 'counter' key.
+                                              // await prefs.setInt('counter', 10);
+
+                                              
+                                                },
+                                              Navigator.pushReplacement(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (_) => HomeScreen())),
+                                            }
+                                          else
+                                            {
+                                              showDialog(
+                                                  context: context,
+                                                  builder: (BuildContext context) {
+                                                    return AlertDialog(
+                                                      title: Text("Warning"),
+                                                      content: Text("Wrong user name or password"),
+                                                    );
+                                                  }),
+                                            },
+                                          setState(() {
+                                            isLoading = false;
+                                          }),
+                                          print(isLoading),
+                                        }),
+                                      },
+                                      }
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
                     ),
-                ],
-              ),
+                ),
+                // isLoading? Center(
+                //   child: CircularProgressIndicator(),
+                // ):Text("data"),
+                if(isLoading)
+                Center(
+                    child: CircularProgressIndicator(),
+                )
+              ],
+
             )
-        )
+
+
 
     );
   }
